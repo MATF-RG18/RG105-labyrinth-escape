@@ -70,7 +70,7 @@ static void on_display()
 	/* Postavlja se kamera*/
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	gluLookAt(10, 10, 10, 0, 0, 0, 0, 1, 0);
+	gluLookAt(15, 9.5, 15, 0, 0, 0, 0, 1, 0);
 
 	/*Crtamo koordinatni sistem*/
 	glColor3f(1, 0, 0);
@@ -83,6 +83,48 @@ static void on_display()
 		glColor3f(0, 0, 1);
 		glVertex3f(0, 0, 0);
 		glVertex3f(10, 0, 0);
+	glEnd();
+
+	/* postavljamo pod*/
+	glColor3f(0.5,0,0);
+	glBegin(GL_POLYGON);
+		glVertex3f(0,0,0);
+		glVertex3f(10, 0, 0);
+		glVertex3f(10, 0, 10);
+		glVertex3f(0, 0, 10);
+	glEnd();
+
+
+	/*postav1ljamo spoljni zid*/
+
+	glColor3f(0,0,0);
+	glBegin(GL_LINE_STRIP);
+		glVertex3f(0,0,0);
+		glVertex3f(10, 0, 0);
+		glVertex3f(10, 5, 0);
+		glVertex3f(0, 5, 0);
+	glEnd();
+
+
+	glBegin(GL_LINE_STRIP);
+		glVertex3f(0,0,0);
+		glVertex3f(0, 5, 0);
+		glVertex3f(0, 5, 10);
+		glVertex3f(0, 0, 10);
+	glEnd();
+
+	glBegin(GL_LINE_STRIP);
+		glVertex3f(10,0,0);
+		glVertex3f(10, 5, 0);
+		glVertex3f(10, 5, 10);
+		glVertex3f(10, 0, 10);
+	glEnd();
+
+	glBegin(GL_LINE_STRIP);
+		glVertex3f(10,0,10);
+		glVertex3f(10, 5, 10);
+		glVertex3f(0, 5, 10);
+		glVertex3f(0, 0, 10);
 	glEnd();
 
 	/*Postavlja se nova slika u prozor*/
