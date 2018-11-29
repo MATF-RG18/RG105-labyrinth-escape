@@ -6,6 +6,12 @@ static void on_display(void);
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_reshape(int width, int height);
 
+// Vektori za kretanje f-forward, b-back
+static int mv_Fx=0,mv_Bx=0,mv_Fz=0,mv_Bz=0;
+
+//pomocna promenljiva za podesavanje blizine kamere
+static int pom_view = 0;
+
 
 int main(int argc, char *argv[])
 {
@@ -51,12 +57,56 @@ static void on_keyboard(unsigned char key, int x, int y)
 	{
 		case 27: exit(0);
 				break;
-		case 'a':
-		case 'A': printf("ACAFACAžn");
-				break;
-		case 'b':
 		case 'B': printf("BANECARžn");
 				break;
+				/* kretanje na WASD*/
+		case 'W':
+		case 'w':
+			{
+            mv_Fz +=1;
+			mv_Fx +=1;
+			glutPostRedisplay();
+			break;
+			}
+		case 's':
+		case 'S':
+			{
+            mv_Bz +=1;
+			mv_Bx +=1;
+			glutPostRedisplay();
+			break;
+			}
+		case 'a':
+		case 'A':
+			{
+			mv_Bz +=1;
+            mv_Fx +=1;
+			glutPostRedisplay();
+			break;
+			}
+		case 'd':
+		case 'D':
+			{
+            mv_Bx +=1;
+			mv_Fz +=1;
+			glutPostRedisplay();
+			break;
+			}
+			/*podesavanje blizine kamere c - close ,f- far*/
+		case 'c':
+		case 'C':
+			{
+				pom_view = 7.5;
+				glutPostRedisplay();
+				break;
+			}
+		case 'f':
+		case 'F':
+			{
+				pom_view = 0;
+				glutPostRedisplay();
+				break;
+			}
 		default: 
 				break;
 	}
@@ -70,7 +120,7 @@ static void on_display()
 	/* Postavlja se kamera*/
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	gluLookAt(15, 9.5, 15, 0, 0, 0, 0, 1, 0);
+	gluLookAt(15-mv_Fx+mv_Bx-pom_view, 9.5 - pom_view, 15-mv_Fz+mv_Bz-pom_view, 0-mv_Fx+mv_Bx, 0, 0-mv_Fz+mv_Bz, 0, 1, 0);
 
 	/*Crtamo koordinatni sistem*/
 	glColor3f(1, 0, 0);
@@ -126,6 +176,16 @@ static void on_display()
 		glVertex3f(0, 5, 10);
 		glVertex3f(0, 0, 10);
 	glEnd();
+
+	
+    /* crtanje probnog igraca i postavljanje na mesto */
+	glPushMatrix();
+    glTranslatef(0-mv_Fx+mv_Bx, 0, 0-mv_Fz+mv_Bz);
+   	glRotatef(45, 0, 1, 0);
+    glTranslatef(0, 0.5, 0);
+    glutSolidCube(1);
+
+    glPopMatrix();
 
 	/*Postavlja se nova slika u prozor*/
 	glutSwapBuffers();
