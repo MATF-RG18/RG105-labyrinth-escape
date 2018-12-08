@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+
+#i have no idea why this isnt ignored 
+Labyrinth
