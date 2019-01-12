@@ -9,4 +9,6 @@ C is for close camera view, F is for far. B is for bird's eye view.
 
 You can also use R to change the maze, anytime. 
 
+How to run the app: './Labyrinth [size]'
+
 GL!
