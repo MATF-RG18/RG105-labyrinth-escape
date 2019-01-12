@@ -3,7 +3,7 @@
 
 Labyrinth escape is a very simple game, just find the way out.
 
-Controls are - W and S for forward and back. Move the mouse for turning.
+Controls are - W and S for forward and back, respectively. Move the mouse for turning.
 
 C is for close camera view, F is for far. B is for bird's eye view.
 
