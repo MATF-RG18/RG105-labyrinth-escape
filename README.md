@@ -1,5 +1,5 @@
 # RG105-labyrinth-escape
-Labyrinth escape
+
 
 Labyrinth escape is a very simple game, just find the way out.
 
