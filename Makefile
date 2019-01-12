@@ -1,10 +1,10 @@
 PROGRAM = Labyrinth
 CC = gcc
-CFLAGS = -Wall 
+CFLAGS = -Wall
 LDFLAGS = -lGLU -lglut -lGL -lm
 
-$(PROGRAM): main.o
-	$(CC) -o $(PROGRAM) main.o $(LDFLAGS)
+$(PROGRAM): main.o image.o
+	$(CC) -o $(PROGRAM) main.o image.o $(LDFLAGS)
 
 .PHONY: clean
 
