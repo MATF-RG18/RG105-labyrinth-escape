@@ -15,6 +15,6 @@ You can also use R to change the maze, anytime.
 
 How to run the app: './Labyrinth [size]'  
 
-***Optimal size is 10-20!*** I didnt limit the size bc is always nice to see a PC crash... Put 500+ i dare you!
+***Optimal size is 10-20!*** I didnt limit the size bc is always nice to see a PC crash... Put 500+ I dare you!
 
 GL!
