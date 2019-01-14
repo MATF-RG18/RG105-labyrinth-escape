@@ -3,15 +3,20 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 #include "image.h"
 
-/* Imena fajlova sa teksturama. */
+/* Names of the texture files */
 #define FILENAME0 "tile.bmp"
 #define FILENAME1 "wall.bmp"
 
-/* Identifikatori tekstura. */
+//Text variable
+unsigned int g_bitmap_text_handle = 0;
+
+/* texture identificators */
 static GLuint names[2];
 
+/*callback functions*/
 static void on_display(void);
 static void releaseKey(unsigned char key, int x, int y);
 static void pressKey(unsigned char key, int x, int y);
@@ -28,17 +33,40 @@ static int scr_width, scr_height;
 static float animation_parameter = 0;
 static int animation_active = 0;
 
+int win = 0;
 
-// Vektori za kretanje 
+/* Variables for positioning */
 static float poz_X = 0, poz_Z = 0;
 
-// Ugao rotacije
+/* value of the rotation angle */
 static float spin = 0;
 
-// Pomocna promenljiva za podesavanje blizine kamere
+/* variables for changing the distance of the camera*/
 static int pom_view = 10;
 static int cam_ind = 0;
 
+
+unsigned int make_bitmap_text()
+{
+	unsigned int handle_base = glGenLists(256);
+
+	for (size_t i=0;i<256;i++)
+	{
+		// a new list for each character
+		glNewList(handle_base+i, GL_COMPILE);
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, i);
+		glEndList();
+	}
+	return handle_base;
+}
+
+void draw_text(const char* text)
+{	
+	int n = strlen(text);
+
+	glListBase(g_bitmap_text_handle);
+	glCallLists(n, GL_UNSIGNED_BYTE, text);
+}
 
 void mouseMove(int x, int y)
 {
@@ -56,8 +84,7 @@ void mouseMove(int x, int y)
 	glutPostRedisplay();
 }
 
-/*  Funkcija koja prihvata niz koji je generisan dfs-om i pretvara ga 
-	u matricu koju koristim za reprezentaciju lavirinta*/
+/*  Function that accepts array that has been generated with DFS algorithm and converts it to matrix which will be used for maze representation */
 void mazeToMatrix(char *maze, int **matrix){
 	  for(int i = 1; i <= width*height; i++){
 	  	if(maze[i-1] == 1){
@@ -67,30 +94,41 @@ void mazeToMatrix(char *maze, int **matrix){
 	  		matrix[(i-1)/width][(i-1)%width] = 2;
    }
 }
+
+/* Checking for any collision with walls */
 int checkCollision()
-{
+{	
+
+	float camWorldX = (poz_X+deltaX)/2;
+	float camWorldZ = (poz_Z + deltaZ)/2;
+
+	int truncX =(int)camWorldX;
+	int truncZ = (int)(camWorldZ);
+
+
+	int roundedZ = round(camWorldZ);
+	int roundedX = round(camWorldX);
+
+	if (poz_X >= (width -1) *2 - 2.3  && poz_Z >= (width -1) *2 - 2.3 ) {
+		win = 1;
+		return 1;
+	}
+
 	if(poz_X < 0 || poz_Z < 0){
 		return 1;
 	}
 
-	int roundedX = round(poz_X);
-	int roundedZ = round(poz_Z);
-
-	int truncX = (int)(poz_X);
-	int truncZ = (int)(poz_Z);
-
-	/*if (matrixMaze[roundedX][roundedZ] == 0)
-		//if (poz_X >= truncX + 0.5 || poz_Z >= truncZ + 0.5)
-			return 1;*/
-
-
-	return 0;
+	if (matrixMaze[roundedX][roundedZ] == 0) {
+		if (camWorldX > truncX+0.5 || truncZ > 1) {
+			return 1;
+			}
+		else return 0;
+	} else
+	 return 0;
 }
-
-/*funkcija koja generise random lavirint i predstavlja ga kao niz.
-	Kasnije ga pretvaram u matricu
+	/* This function generates random maze with DFS algorithm and represents it as an array that will be later converted to matrix.
 	*************************************************
-	preuzeto sa https://en.wikipedia.org/wiki/Maze_generation_algorithm
+	Copied from https://en.wikipedia.org/wiki/Maze_generation_algorithm and slightly modified
 	**********************************************
 	*/
 void CarveMaze(char *maze, int width, int height, int x, int y) {
@@ -133,7 +171,7 @@ void CarveMaze(char *maze, int width, int height, int x, int y) {
 
 
 
-/* takodje https://en.wikipedia.org/wiki/Maze_generation_algorithm */
+/* https://en.wikipedia.org/wiki/Maze_generation_algorithm */
 void GenerateMaze(char *maze, int width, int height) {
 
    int x, y;
@@ -164,20 +202,20 @@ void GenerateMaze(char *maze, int width, int height) {
 
 
 
-/* Izracunavamo nove koordinate igraca */
+/* Calculate the new position for the player */
 void computePos(float deltaX, float deltaZ){
 
-	float angle = (M_PI/180.0);
+	float coef = (M_PI/180.0);
 
 	int oldx = poz_X;
 	int oldz = poz_Z;
 
 	if(deltaX > 0){
-		poz_X += deltaX * (cos(spin * angle) - sin(spin * angle));
-		poz_Z += deltaZ * (cos(spin * angle) + sin(spin * angle));
+		poz_X += deltaX * (cos(spin * coef) - sin(spin * coef));
+		poz_Z += deltaZ * (cos(spin * coef) + sin(spin * coef));
 	}else if(deltaX < 0){
-		poz_X += deltaX * (cos(spin * angle) - sin(spin * angle));
-		poz_Z += deltaZ * (cos(spin * angle) + sin(spin * angle));
+		poz_X += deltaX * (cos(spin * coef) - sin(spin * coef));
+		poz_Z += deltaZ * (cos(spin * coef) + sin(spin * coef));
 	}
 
 	if(checkCollision() == 1){
@@ -187,11 +225,13 @@ void computePos(float deltaX, float deltaZ){
 }
 
 
+
 int main(int argc, char *argv[])
 {
 
+
    if(argc != 2){
-		printf("Greska! Pravilno pokretanje programa: ./Labyrinth [velicina] \n");
+		printf("Error! Correct launch: ./Labyrinth [size] \n");
 		exit(EXIT_FAILURE);
 		}
 
@@ -200,14 +240,14 @@ int main(int argc, char *argv[])
    height = width;
 	
 	
-   
+   /* Allocating the memory for the maze*/
    maze = (char*)malloc(width * height * sizeof(char));
    if(maze == NULL) {
       printf("error: not enough memory\n");
       exit(EXIT_FAILURE);
    }
 
-   /* Generate and display the maze. */
+   /* Generate the maze. */
    GenerateMaze(maze, width, height);
 
   	matrixMaze = (int**)malloc(width * sizeof(int*));
@@ -219,10 +259,10 @@ int main(int argc, char *argv[])
 	mazeToMatrix(maze, matrixMaze);
 
 
-	/*Vrsimo inicijalizaciju osnovnih funkcionalnosti*/
+	/*Initialization of the basic funtionalities*/
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-	/*Inicijalizacija prozora*/
+	/*Initialization of the window*/
 	scr_height = glutGet(GLUT_SCREEN_HEIGHT);
 	scr_width = glutGet(GLUT_SCREEN_WIDTH);
 	glutInitWindowSize(scr_width, scr_height);
@@ -231,9 +271,7 @@ int main(int argc, char *argv[])
 
 	
 
-	/*Registruju se funkcije za obradu dogadjaja*/
-	//glutMouseFunc(movelight);
-	//glutPassiveMotionFunc(motion);
+	/*Registering the event handling functions*/
 	glutKeyboardFunc(pressKey);
 	glutIgnoreKeyRepeat(1);
 	glutKeyboardUpFunc(releaseKey);
@@ -241,12 +279,11 @@ int main(int argc, char *argv[])
 	glutReshapeFunc(on_reshape);
 	glutPassiveMotionFunc(mouseMove);
 	glutSetCursor(GLUT_CURSOR_NONE);
-	/*glutWarpPointer(SizeX/2,SizeY/2);*/
-
-	/* Obavlja se openGL inicijalizacija*/
+	
+	/* OpenGL initialization */
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(0.75, 0.75, 0.75, 0);
 
+	glClearColor(0, 0, 0, 0);
 	glEnable(GL_TEXTURE_2D);
 
 	Image * image;
@@ -255,15 +292,15 @@ int main(int argc, char *argv[])
   	
 
     /*
-     * Inicijalizuje se objekat koji ce sadrzati teksture ucitane iz
-     * fajla.
+     * Initializing object that will contain texture images from the file
      */
+
     image = image_init(0, 0);
 
-    /* Kreira se prva tekstura. */
+    /* Creating the first texture. */
     image_read(image, FILENAME0);
 
-    /* Generisu se identifikatori tekstura. */
+    /* Generating texture identificators */
     glGenTextures(2, names);
 
     glBindTexture(GL_TEXTURE_2D, names[0]);
@@ -275,7 +312,7 @@ int main(int argc, char *argv[])
                  image->width, image->height, 0,
                  GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
 
-    /* Kreira se druga tekstura. */
+    /* Creating the second texture */
     image_read(image, FILENAME1);
 
     glBindTexture(GL_TEXTURE_2D, names[1]);
@@ -287,13 +324,14 @@ int main(int argc, char *argv[])
                  image->width, image->height, 0,
                  GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
 
-    /* Iskljucujemo aktivnu teksturu */
+    /* Turning off the active texture */
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    /* Unistava se objekat za citanje tekstura iz fajla. */
+    /* Destroying the file for reading the file textures. */
     image_done(image);
 
-	/* Ulazi se u glavnu petlju! ^^ */
+	g_bitmap_text_handle = make_bitmap_text();
+	/* entering the main loop */
 	glutMainLoop();
 	
 
@@ -314,8 +352,6 @@ static void on_reshape(int width, int height)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(55, ((float)scr_width+5)/scr_height, 3.6, 100);
-	//gluLookAt(12.5-poz_X -pom_view, 12.5- pom_view, 12.5-poz_Z-pom_view, 0-poz_X, 0, 0- poz_Z, 0, 1, 0);
-	//glutPostRedisplay();
 }
 
 static void pressKey(unsigned char key, int x, int y)
@@ -336,25 +372,26 @@ static void pressKey(unsigned char key, int x, int y)
 				break;
 		case 'w': 
 		case 'W':
-				if(!cam_ind){
+				if(!cam_ind && win == 0){
 					if (!animation_active) {
            			 glutTimerFunc(10, on_timer, 0);
             		animation_active = 1;
        				 }
-				deltaX = 0.2f;
-				deltaZ = 0.2f;
+				deltaX = 0.07f;
+				deltaZ = 0.07f;
 				}
+				
 			break;
 			
 		case 's':
 		case 'S':
-				if(!cam_ind){
+				if(!cam_ind && win == 0){
 					if (!animation_active) {
            			 glutTimerFunc(10, on_timer, 0);
             		animation_active = 1;
        				 }
-				deltaX = -0.2f;
-				deltaZ = -0.2f;
+				deltaX = -0.07f;
+				deltaZ = -0.07f;
 				
 				}
 			break;
@@ -383,6 +420,16 @@ static void pressKey(unsigned char key, int x, int y)
 				glutPostRedisplay();
 				break;
 			}
+		case 'p':
+		case 'P':
+			{
+				win = 0;
+				poz_X = 0.5;
+				poz_Z = 0.5;
+				glutPostRedisplay();
+				break;
+			}
+
 	}
 }
 
@@ -534,14 +581,33 @@ static void on_display()
 	/* Postavlja se kamera*/
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(55, ((float)scr_width+5)/scr_height, 3.6, width*3);
+	gluPerspective(55, ((float)scr_width+5)/scr_height, 2.8, width*3);
 	//u slucaju da je indikator ukljucen, prebacuje se na pticiju perspektivu
 	if(cam_ind){
 		gluLookAt(-width, width*2, -width, -width, 0, -width, 1, 0, 1);
 	}
 	else{
-		gluLookAt(12.5-poz_X -pom_view, 12.5- pom_view, 12.5-poz_Z-pom_view, 0-poz_X, 0, 0- poz_Z, 0, 1, 0);
+		gluLookAt(12.5-poz_X -pom_view, 11.5- pom_view, 12.5-poz_Z-pom_view, 0-poz_X, 0, 0- poz_Z, 0, 1, 0);
 	}		
+
+	if (!win) {
+		//Helper text
+		glPushMatrix();
+			glColor3f(1, 1, 1);
+			glTranslatef(0, 1, 0);
+			glRasterPos2i(0, 0); // centre the text
+			draw_text("You start here. Watch out for those evil walls. GL!");
+		glPopMatrix();
+	} else {
+
+		//Text when goal is reached
+		glPushMatrix();
+			glColor3f(1, 1, 1);
+			glTranslatef(-(poz_X + 1) , 1,- (poz_Z + 1));
+			glRasterPos2i(0, 0); // centre the text
+			draw_text("YOU WIN! press P and R for restarting");
+		glPopMatrix();
+	}
 
 
 	//podesavamo da se kamera rotira oko igraca
@@ -552,37 +618,13 @@ static void on_display()
 	glRotatef(180, 0, 1, 0);
 
 
-	//crtamo okolinu lavirinta
+	//draw the floor under the maze so it isnt a floating island
 	glColor3f(0.13, 0.52, 0.69);
 	glBegin(GL_QUADS);
 	glVertex3f(-4*width,  -1.01, -4*width);
 	glVertex3f(-4*width, -1.01, 2*width);
 	glVertex3f(2*width, -1.01, 2*width);
 	glVertex3f(2*width, -1.01, -4*width);
-	glEnd();
-
-	
-	glColor3f(0.13, 0.52, 0.69);
-	glBegin(GL_QUADS);
-	/*glVertex3f(0-1,-1,0-1);
-	glVertex3f(0-1, -1, width*2-1);
-	glVertex3f(0-1, width*2, width*2-1);
-	glVertex3f(0-1, width*2, 0-1);*/
-
-	glVertex3f(0-width*2, width*2, width*2-1);
-	glVertex3f(0-width*2, -1, width*2-1);
-	glVertex3f(width*2-1, -1, width*2-1);
-	glVertex3f(width*2-1, width*2, width*2-1);
-	
-	/*lVertex3f(0-1, -1, 0-1);
-	glVertex3f(0-1, width*2, 0-1);
-	glVertex3f(width*2-1, width*2, 0-1);
-	glVertex3f(width*2-1, -1, 0-1);*/
-	
-	glVertex3f(width*2-1, -1, 0-width*2);
-	glVertex3f(width*2-1, width*2, 0-width*2);
-	glVertex3f(width*2-1, width*2, width*2-1);
-	glVertex3f(width*2-1, -1, width*2-1);
 	glEnd();
 
 
