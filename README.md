@@ -19,4 +19,4 @@ How to run the app: './Labyrinth [size]'
 
 GL!
 
-***Oh yeah, one more thing***, the walls have this tendency to swallow up people. Not cause im a lousy programmer but cause they are ***evil***, so if you ever get stuck just press P to get you back at start...or just press R as many times as needed.
+***Oh yeah, one more thing***... See, the walls have this tendency to swallow up people. Not because im a lousy programmer, but 'cause they are ***evil***, so if you ever get stuck just press P to get you back at start...or just press R as many times as needed.
