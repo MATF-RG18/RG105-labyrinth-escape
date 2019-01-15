@@ -4,6 +4,7 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+
 #include "image.h"
 
 /* Names of the texture files */
@@ -45,7 +46,7 @@ static float spin = 0;
 static int pom_view = 10;
 static int cam_ind = 0;
 
-
+//function that creates and renders bitmap characters
 unsigned int make_bitmap_text()
 {
 	unsigned int handle_base = glGenLists(256);
@@ -60,6 +61,7 @@ unsigned int make_bitmap_text()
 	return handle_base;
 }
 
+//drawing bitmap characters
 void draw_text(const char* text)
 {	
 	int n = strlen(text);
@@ -345,10 +347,10 @@ int main(int argc, char *argv[])
 static void on_reshape(int width, int height)
 {
 
-	/* Postavlja se viewport*/
+	/* Setting the viewport*/
 	glViewport(0,0, width, height);
 
-	/*Postavljaju se parametri projekcije*/
+	/* Editing the projection parameters */
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(55, ((float)scr_width+5)/scr_height, 3.6, 100);
@@ -372,6 +374,7 @@ static void pressKey(unsigned char key, int x, int y)
 				break;
 		case 'w': 
 		case 'W':
+				//if bird's eye view is off and we didnt reach the end of the maze, then we can move
 				if(!cam_ind && win == 0){
 					if (!animation_active) {
            			 glutTimerFunc(10, on_timer, 0);
@@ -399,6 +402,7 @@ static void pressKey(unsigned char key, int x, int y)
 		case 'c':
 		case 'C':
 			{	
+				//Change the camera distance to close
 				cam_ind = 0;
 				pom_view = 10;
 				glutPostRedisplay();
@@ -407,6 +411,7 @@ static void pressKey(unsigned char key, int x, int y)
 		case 'f':
 		case 'F':
 			{
+				//Change the camera distance to far
 				cam_ind = 0;
 				pom_view = 7.5;
 				glutPostRedisplay();
@@ -415,6 +420,7 @@ static void pressKey(unsigned char key, int x, int y)
 		case 'r':
 		case 'R':
 			{
+				//Recreate the maze
 				GenerateMaze(maze, width, height);
 				mazeToMatrix(maze, matrixMaze);
 				glutPostRedisplay();
@@ -423,6 +429,7 @@ static void pressKey(unsigned char key, int x, int y)
 		case 'p':
 		case 'P':
 			{
+				//move to starting position
 				win = 0;
 				poz_X = 0.5;
 				poz_Z = 0.5;
@@ -462,7 +469,7 @@ static void releaseKey(unsigned char key, int x, int y)
 	}
 }
 
-
+//name of this function is selfexplanatory
 void drawFloor(GLfloat x1, GLfloat x2, GLfloat z1, GLfloat z2)
 {
 	glBindTexture(GL_TEXTURE_2D, names[0]);
@@ -482,13 +489,13 @@ void drawFloor(GLfloat x1, GLfloat x2, GLfloat z1, GLfloat z2)
 }
 
 
-// funkcija za crtanje zidova lavirinta
+//yep
 void drawWall(float x1, float x2, float y1, float y2, float z1, float z2){
 	glBindTexture(GL_TEXTURE_2D, names[1]);
 	glBegin(GL_QUADS);
 	glColor3f(0.5, 0.5, 0.5);
 
-	//Desna strana
+	//Draw the right side
 	glNormal3f(0, 0, 1);
 	glTexCoord2f(0,0);
 	glVertex3f(x1, y1, z1);
@@ -500,7 +507,7 @@ void drawWall(float x1, float x2, float y1, float y2, float z1, float z2){
 	glVertex3f(x1, y2, z1);
 
 
-	//Leva strana
+	//left side
 	glNormal3f(0, 0, -1);
 	glTexCoord2f(0,0);
 	glVertex3f(x1, y1, z2);
@@ -512,7 +519,7 @@ void drawWall(float x1, float x2, float y1, float y2, float z1, float z2){
 	glVertex3f(x1, y2, z2);
 
 
-	//Gornja strana
+	//Top
 	glNormal3f (0,1, 0);
 	glTexCoord2f(0,0);
 	glVertex3f(x1, -y2, z1);
@@ -523,7 +530,7 @@ void drawWall(float x1, float x2, float y1, float y2, float z1, float z2){
 	glTexCoord2f(0,1);
 	glVertex3f(x1, -y2, z2);
 
-	//Zadnja strana
+	// Back side
 	glNormal3f (1,0, 0);
 	glTexCoord2f(0,0);
 	glVertex3f(x1, y1, z1);
@@ -535,7 +542,7 @@ void drawWall(float x1, float x2, float y1, float y2, float z1, float z2){
 	glVertex3f(x1, y1, z2);
 
 
-	//Prednja strana
+	//Front side
 	glNormal3f (-1,0, 0);
 	glTexCoord2f(0,0);
 	glVertex3f(x2, y1, z1);
@@ -552,17 +559,17 @@ void drawWall(float x1, float x2, float y1, float y2, float z1, float z2){
 
 static void on_timer(int value)
 {
-    /* Proverava se da li callback dolazi od odgovarajuceg tajmera. */
+    /* Check if the callback is coming from the correct timer. */
     if (value != 0)
         return;
 
-    /* Azurira se vreme simulacije. */
+    /* Adjusting the simulation time. */
     animation_parameter++;
 
-    /* Forsira se ponovno iscrtavanje prozora. */
+    /* Force window redisplay. */
     glutPostRedisplay();
 
-    /* Po potrebi se ponovo postavlja tajmer. */
+    /* If needed, set the timer again. */
     if (animation_active)
         glutTimerFunc(10, on_timer, 0);
 }
@@ -571,18 +578,18 @@ static void on_timer(int value)
 static void on_display()
 {
 
-
+	//if 'w' or 's' is pressed, compute the position
 	if(deltaX || deltaZ){
 		computePos(deltaX, deltaZ);
 	}
 	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	/* Postavlja se kamera*/
+	/* Setting up the camera*/
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(55, ((float)scr_width+5)/scr_height, 2.8, width*3);
-	//u slucaju da je indikator ukljucen, prebacuje se na pticiju perspektivu
+	//If indicator equals 1 then switch to bird's eye view, otherwise go to normal view
 	if(cam_ind){
 		gluLookAt(-width, width*2, -width, -width, 0, -width, 1, 0, 1);
 	}
@@ -599,7 +606,6 @@ static void on_display()
 			draw_text("You start here. Watch out for those evil walls. GL!");
 		glPopMatrix();
 	} else {
-
 		//Text when goal is reached
 		glPushMatrix();
 			glColor3f(1, 1, 1);
@@ -610,7 +616,7 @@ static void on_display()
 	}
 
 
-	//podesavamo da se kamera rotira oko igraca
+	//This makes the player center of camera rotation
 	glTranslatef(-poz_X, 0, -poz_Z);    					
 	glRotatef(spin, 0, 1, 0);								
 	glTranslatef(poz_X, 0, poz_Z);				
@@ -618,7 +624,7 @@ static void on_display()
 	glRotatef(180, 0, 1, 0);
 
 
-	//draw the floor under the maze so it isnt a floating island
+	//draw the floor under the maze so it isn't a floating island
 	glColor3f(0.13, 0.52, 0.69);
 	glBegin(GL_QUADS);
 	glVertex3f(-4*width,  -1.01, -4*width);
@@ -629,10 +635,9 @@ static void on_display()
 
 
 
-	//crtamo zidove i pod
+	//Draw walls and the floor
 	for(int i = 0; i < width; i++) {
 		for(int j=0; j < height; j++) {
-			//Crtamo zid
 			if (matrixMaze[i][j] == 0) {
 				glPushMatrix();
 					glTranslatef(2*i, 0, j*2);
@@ -641,7 +646,6 @@ static void on_display()
 					glDisable(GL_TEXTURE_2D);
 				glPopMatrix();
 			} else {
-				//Crtamo pod
 				glPushMatrix();
 					glTranslatef(2*i, 0, j*2);
 					glEnable(GL_TEXTURE_2D);
@@ -656,21 +660,21 @@ static void on_display()
 	glColor3f(0, 0, 0);
 	glPushMatrix();
     glTranslatef(0+poz_X, 0, 0+poz_Z);
-    //crtanje igraca i postavljanje na mesto
+    //Draw the player and put it on correct position
    	glRotatef(45, 0, 1, 0);
     
-   
+   //this is player's body
     glRotatef(-spin, 0, 1, 0);
     glScalef(1, 1, 0.5);
     glutSolidCube(0.5);
  
 
-    //leva ruka
+    //draw the left hand
     glPushMatrix();
     glRotatef(
-            /* ugao */
+            /* angle */
             sin(animation_parameter / 5.0f) * 30.0f,
-            /* vektor rotacije */
+            /* rotation vector */
             1,0, 0
         );
     glColor3f(0.5, 0, 0);
@@ -679,12 +683,12 @@ static void on_display()
     glutSolidCube(0.15);
     glPopMatrix();
 
-    //desna ruka
+    //right hand
     glPushMatrix();
     glRotatef(
-            /* ugao */
+            /* angle */
             -sin(animation_parameter / 5.0f) * 30.0f,
-            /* vektor rotacije */
+            /* vector of rotation */
            1, 0, 0
         );
     glColor3f(0.5, 0, 0);
@@ -693,12 +697,12 @@ static void on_display()
     glutSolidCube(0.15);
     glPopMatrix();
 
-    //leva noga
+    //left leg
     glPushMatrix();
     glRotatef(
-            /* ugao */
+            /* angle */
             -sin(animation_parameter / 5.0f) * 30.0f,
-            /* vektor rotacije */
+            /* vector of rotation */
             1, 0, 0
         );
     glColor3f(0.5, 0, 0);
@@ -708,12 +712,12 @@ static void on_display()
     glPopMatrix();
 
 
-    //desna noga
+    //right leg
     glPushMatrix();
     glRotatef(
-            /* ugao */
+            /* angle */
             sin(animation_parameter / 5.0f) * 30.0f,
-            /* vektor rotacije */
+            /*vector of rotation */
             1, 0, 0
         );
     glColor3f(0.5, 0, 0);
@@ -722,7 +726,7 @@ static void on_display()
     glutSolidCube(0.15);
     glPopMatrix();
 
-
+    //player's head
     glColor3f(1, 1, 1);
     glTranslatef(0, 0.5, 0);
     glutSolidSphere(0.2, 50, 50);
@@ -731,6 +735,6 @@ static void on_display()
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-	/*Postavlja se nova slika u prozor*/
+	/*Put the new picture in the window*/
 	glutSwapBuffers();
 }
